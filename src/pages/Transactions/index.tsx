@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Header } from '../../components/Header';
 import { SearchForm } from '../../components/SearchForm';
 import { Summary } from '../../components/Summary';
@@ -7,7 +8,27 @@ import {
   TransactionsTable,
 } from './styles';
 
+export interface Transaction {
+  id: number;
+  description: string;
+  amount: number;
+  type: 'income' | 'outcome';
+  createdAt: string;
+  category: string;
+}
+
 export function Transactions() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  async function loadingTransactions() {
+    const response = await fetch('http://localhost:3333/transactions');
+    const data = await response.json();
+    setTransactions(data);
+  }
+  useEffect(() => {
+    loadingTransactions();
+  }, []);
+
   return (
     <div>
       <Header />
@@ -17,22 +38,18 @@ export function Transactions() {
         <SearchForm />
         <TransactionsTable>
           <tbody>
-            <tr>
-              <td>Pay check</td>
-              <td>
-                <PriceHighlight variant="income">3.000,00</PriceHighlight>
-              </td>
-              <td>income</td>
-              <td>20/02/2023</td>
-            </tr>
-            <tr>
-              <td>Rent</td>
-              <td>
-                <PriceHighlight variant="outcome">1.000,00</PriceHighlight>
-              </td>
-              <td>Fixed</td>
-              <td>20/02/2023</td>
-            </tr>
+            {transactions.map((transaction) => (
+              <tr key={transaction.id}>
+                <td>{transaction.description}</td>
+                <td>
+                  <PriceHighlight variant={transaction.type}>
+                    {transaction.amount}
+                  </PriceHighlight>
+                </td>
+                <td>{transaction.category}</td>
+                <td>{transaction.createdAt}</td>
+              </tr>
+            ))}
           </tbody>
         </TransactionsTable>
       </TransactionsContainer>
